@@ -19,7 +19,6 @@ app.use(express.json());
 
 // above is same as login.js
 
-
 app.post('/join', function(req,res){
   req.accepts('application/json');
   var json = req.body;

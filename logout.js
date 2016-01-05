@@ -26,6 +26,7 @@ app.post('/logout', function(req,res){
         console.log('destroyed');
       }
     });
+
     res.send({
       "status": "ok",
       "result":[]

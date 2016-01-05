@@ -12,8 +12,6 @@ app.get('/',function(req,res){
   var output={};
   output.cookies = req.cookies;
   output.session = req.session;
-
-  req.session.now = (new Date()).toUTCString();
   
   res.send(output);
 });
