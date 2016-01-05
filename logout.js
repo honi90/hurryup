@@ -13,21 +13,26 @@ var db = mysql.createConnection({
 });
 
 app.use(express.logger());
-app.use(express.session({secret:'secret key'});
+app.use(express.session({secret:'secret key'}));
 app.use(express.bodyParser());
 app.use(express.json());
 
 app.post('/logout', function(req,res){
   if(req.session.logined){
-    req.session.logined = false;
+    req.session.destroy(function(err){
+      if(err){
+        console.log(err);
+      }else{
+        console.log('destroyed');
+      }
+    });
     res.send({
       "status": "ok",
       "result":[]
     });
   }else{
-    
     res.send({
-      "status": "ok",
+      "status": "invalidUser",
       "result":[]
     });
   }

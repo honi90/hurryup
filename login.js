@@ -13,7 +13,7 @@ var db = mysql.createConnection({
 });
 
 app.use(express.logger());
-app.use(express.session({secret:'secret key'});
+app.use(express.session({secret:'secret key'}));
 app.use(express.bodyParser());
 app.use(express.json());
 
@@ -44,7 +44,6 @@ app.post('/login', function(req,res){
         });
       }else{
         if(result[0].pw == pw){//로그인 성공
-          //session 추가해야함. 
           db.query('SELECT meeting_id FROM meeting_members WHERE meeting_member=?',[id],function(err2,result2,field2){
             if(err2){
               console.log('Error in login part second sql query');
@@ -58,7 +57,7 @@ app.post('/login', function(req,res){
                 "status": "OK",
                 "result": result2
               });
-              req.session.logined = true;
+              req.session.logined = id;
             }
           });
         }else{//로그인 실패 by password mismatch
