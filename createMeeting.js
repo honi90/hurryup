@@ -28,9 +28,11 @@ function createMeeting(request, response) {
         meetTime = request.body.meetTime,
         hostName = request.bodyhostName;
 
+
+
     db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
         if (err) {
-            console.log('Error in PhoneNumber part first sql query');
+            console.log('Error when select PhoneNumber ');
             response.send({
                 "status": 'InvalidPhoneNumber',
                 "result": []
@@ -45,6 +47,9 @@ function createMeeting(request, response) {
                         "result": []
                     });
                 }
+                else {
+                    console.log("Insert into meeting table is suscces : " +result);
+                }
             });
 
             if (request.session.logined) {
@@ -55,7 +60,6 @@ function createMeeting(request, response) {
                         console.log('destroyed');
                     }
                 });
-
                 response.send({
                     "status": "ok",
                     "result": []
