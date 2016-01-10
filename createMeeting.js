@@ -3,7 +3,8 @@
 var http = require('http'),
     express = require('express'),
     bodyParser = require('body-parser'),
-    mysql = require('mysql');
+    mysql = require('mysql'),
+    async = require('async');
 
 var app = express();
 
@@ -13,7 +14,7 @@ var db = mysql.createConnection({
     database: 'hurryup'
 });
 
-app.use(express.session({ secret: 'secret key' }));
+// app.use(express.session({ secret: 'secret key' }));
 app.use(express.bodyParser());
 app.use(express.json());
 app.use(bodyParser.urlencoded({
@@ -21,49 +22,64 @@ app.use(bodyParser.urlencoded({
 }));
 
 function createMeeting(request, response) {
+    var invalidPhoneNumbers = [];
 
-    var phoneNumber = request.body.phoneNumber;
+    var phoneNumbers = request.body.phoneNumber;
     var meetName = request.body.meetName,
         location = request.body.location,
-        meetTime = request.body.meetTime,
-        hostName = request.bodyhostName;
+        meetTime = request.body.meetTime;
 
-    db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
-        if (err) {
-            console.log('Error when select PhoneNumber ');
+    async.each(phoneNumbers, function (phoneNumber, next) {
+        db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
+            if (err) {
+                console.log("Select phone number query makes error.");
+                next(err);
+            } else if (result.length === 0) {
+                invalidPhoneNumbers.push(phoneNumber);
+                next();
+            } else {
+                db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);',
+                    [meetName, "", location.latitude, location.longitude, meetTime, phoneNumber],
+                    function (err, result, fields) {
+                        if (err) {
+                            next(err);
+                        }
+                        else {
+                            console.log(phoneNumber + " Insert into meeting table is suscces : " + result);
+                            next();
+                        }
+                    });
+            }
+        });
+    }, function (error) {
+
+        if (error) {
+            console.log("Error is occured : " + error);
+
             response.send({
-                "status": 'InvalidPhoneNumber',
+                "status": 'protocolError',
                 "result": []
-            })
+            });
+
         } else {
-            db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);', [meetName, "", location.latitude, location.longitude, meetTime, hostName], function (err, result, fields) {
-                if (err) {
-                    console.log(err);
-                    console.log('Error in join part first sql query');
+            if (invalidPhoneNumbers.length > 0) {
                     response.send({
-                        "status": 'protocolError',
+                        "status": "InvalidPhoneNumber",
+                        "result": invalidPhoneNumbers
+                    });
+                } else if (true) {
+                    response.send({
+                        "status": "ok",
+                        "result": []
+                    });
+                } else {
+                    response.send({
+                        "status": "invalidUser",
                         "result": []
                     });
                 }
-                else {
-                    console.log("Insert into meeting table is suscces : " +result);
-                }
-            });
-
-            if (request.session.logined) {
-                response.send({
-                    "status": "ok",
-                    "result": []
-                });
-            } else {
-                response.send({
-                    "status": "invalidUser",
-                    "result": []
-                });
             }
-        }
-    });
-    response.end("meetTime : " + meetTime + "," + "meetName : " + meetName);
+        });
 }
 
 app.post('/createMeeting', createMeeting, function (error, data) {
