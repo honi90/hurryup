@@ -28,8 +28,6 @@ function createMeeting(request, response) {
         meetTime = request.body.meetTime,
         hostName = request.bodyhostName;
 
-
-
     db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
         if (err) {
             console.log('Error when select PhoneNumber ');
@@ -53,13 +51,6 @@ function createMeeting(request, response) {
             });
 
             if (request.session.logined) {
-                request.session.destroy(function (err) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log('destroyed');
-                    }
-                });
                 response.send({
                     "status": "ok",
                     "result": []

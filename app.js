@@ -243,9 +243,6 @@ app.post('/getMembersLocation', function(request, response){
 		console.log('user id :' +u_id);
 		console.log('약속 id :' + id);
 
-//part2] check valid user-meeting
-
-		response.setHeader("Content-Type" , "application/json");
 		db.query('SELECT * FROM meeting_members where meeting_member= ?  AND meeting_id=?',[u_id,id],function(error, rows, field)
 			{
 				if(error) return  console.log(error);
@@ -369,13 +366,6 @@ function createMeeting(request, response) {
             });
 
             if (request.session.logined) {
-                request.session.destroy(function (err) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log('destroyed');
-                    }
-                });
                 response.send({
                     "status": "ok",
                     "result": []
