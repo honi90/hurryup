@@ -3,9 +3,6 @@
 -- Host: localhost    Database: hurryup
 -- ------------------------------------------------------
 -- Server version	5.5.46-0ubuntu0.14.04.2
-create database hurryup;
-use hurryup;
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -85,6 +82,8 @@ DROP TABLE IF EXISTS `meeting_members`;
 CREATE TABLE `meeting_members` (
   `meeting_id` int(11) NOT NULL,
   `meeting_member` varchar(50) NOT NULL,
+  `is_arrived` tinyint(1) NOT NULL DEFAULT '0',
+  `arrived_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`meeting_id`,`meeting_member`),
   KEY `meeting_member_for_idx` (`meeting_member`),
   CONSTRAINT `meeting_id_for` FOREIGN KEY (`meeting_id`) REFERENCES `meeting` (`m_id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -98,7 +97,7 @@ CREATE TABLE `meeting_members` (
 
 LOCK TABLES `meeting_members` WRITE;
 /*!40000 ALTER TABLE `meeting_members` DISABLE KEYS */;
-INSERT INTO `meeting_members` VALUES (1,'test'),(2,'test'),(1,'test1');
+INSERT INTO `meeting_members` VALUES (1,'test',0,'0000-00-00 00:00:00'),(1,'test1',0,'0000-00-00 00:00:00'),(2,'test',0,'0000-00-00 00:00:00');
 /*!40000 ALTER TABLE `meeting_members` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -138,4 +137,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-05 22:40:32
+-- Dump completed on 2016-01-10 15:40:41
