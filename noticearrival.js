@@ -27,6 +27,7 @@ app.use(express.bodyParser());
 app.use(express.json());
 
 
+
 app.post('/noticeArrival', function(request, response){
 //part1] request 확인
 		var json_parsed=request.body;

@@ -237,8 +237,6 @@ app.post('/location', function(request, response){
 						"result": "update location"
 						});
 				});
-			db.end();
-
 		}
 });
 
@@ -397,6 +395,79 @@ app.post('/createMeeting', createMeeting, function (error, data) {
     console.log(data);
 });
 
+
+app.post('/noticeArrival', function(request, response){
+//part1] request 확인
+		var json_parsed=request.body;
+	
+		var id = json_parsed.user_id;
+		var meeting_id=json_parsed.meeting_id;
+		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
+
+		console.log('id 		:' + id);
+		console.log('meeting_id :' + meeting_id);
+
+
+//part2] DB update
+		db.query('UPDATE meeting_members SET is_arrived= 1,arrived_time=? WHERE meeting_id =? AND meeting_member=?',[new_updated_time,meeting_id, id], function(err) {
+      
+      });
+
+		db.query('SELECT * FROM meeting_members where meeting_member =?  AND  meeting_id=?', [id,meeting_id],function(err,result,field){
+					if(err)
+					{
+						console.log("Error in Update Meeting_member  Query error");
+						response.send({
+							"status":"Error",
+							"result":[]
+						});
+					}
+          else{
+			
+              if(result.length ==0)
+				    	{
+				    		console.log("Update Arrival  failed : InvalidID");
+				    		response.send({
+				    			"status": "InvalidMember",
+				  	  		"result": []
+				  	  		});
+				    	}
+             else{
+
+					      console.log(result);
+
+             
+		            db.query('SELECT * FROM meeting where m_id =?', [meeting_id],function(err,result,field){
+                      
+                    if(result.length==0)
+                    {
+                      console.log("그런meeting없다");
+
+                    }
+                    else{
+                    console.log(">>>>>>> :\n"+result);
+                      console.log(new_updated_time);
+                      console.log(result[0].m_time);
+                      var a = moment(result[0].m_time).tz("Asia/Seoul");
+                      var b = moment().tz("Asia/Seoul");
+                      var c = a.diff(b)
+                      console.log(c);
+                      }
+                 });
+                    
+					      response.send(
+					       	{
+					        	"status": "Success",
+						        "arrival_time": new_updated_time
+					      	});
+               }
+          //////////////////////////////credit 살리기이이이이이
+         }
+			});
+
+
+		
+});
 
 app.get('/',function(req,res){
   var output={};
