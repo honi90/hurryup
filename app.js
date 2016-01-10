@@ -194,8 +194,8 @@ app.post('/location', function(request, response){
 		var json_parsed=request.body;
 	
 		var id = json_parsed.id;
-		var new_longitude=json_parsed.meetLocation.longitude;
-		var new_latitude=json_parsed.meetLocation.latitude;
+		var new_longitude=json_parsed.meetingLocation.longitude;
+		var new_latitude=json_parsed.meetingLocation.latitude;
 		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
 
 		console.log('id 		:' + id);
