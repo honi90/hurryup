@@ -494,7 +494,7 @@ app.get('/',function(req,res){
   res.send(output);
 });
 
-http.createServer(app).listen(80, function(){
+http.createServer(app).listen(10000, function(){
   console.log('server running at (server ip):80');
 });
 
