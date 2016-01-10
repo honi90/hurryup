@@ -341,7 +341,7 @@ function createMeeting(request, response) {
     var meetName = request.body.meetName,
         location = request.body.location,
         meetTime = request.body.meetTime,
-        hostName = request.bodyhostName;
+        hostName = request.body.hostName;
 
     db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
         if (err) {
@@ -378,7 +378,7 @@ function createMeeting(request, response) {
             }
         }
     });
-    response.end("meetTime : " + meetTime + "," + "meetName : " + meetName);
+    //response.end("meetTime : " + meetTime + "," + "meetName : " + meetName);
 }
 
 app.post('/createMeeting', createMeeting, function (error, data) {
