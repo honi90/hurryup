@@ -151,30 +151,40 @@ app.post('/join', function(req,res){
   console.log('requested data: ');
   console.log(json);
   
-  db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber) VALUES (?,?,?,?,?);',[id,pw,0,name,pNum], function(err,result,fields){
-    if(err){
-      console.log(err);
-      console.log('Error in join part first sql query');
-      res.send({
-        "status": 'protocolError',
-        "result": []
-      });
-    } else{
-      db.query('INSERT INTO location (latitude,longitude,location.id,updated_time) VALUES (?,?,?,?);',[0,0,id,'1999-12-31 23:59:59'],function(err2,result2,fields2){
-        if(err2){
-          console.log('Error in join part second sql query');
-          res.send({
-            "status":'dbError',
-            "result":[]
-          });
-        }else{
-          res.send({
-            'status': 'OK',
-            'result': []
-          });
-        }
-      });
-    }
+  db.query('SELET * from phoneNumber where phoneNumber =?', [pNum], function (error, rows, field) {
+     if (error) {
+         console.log("Already have phone number : " + pNum);
+         res.send({
+             "status": 'DuplicatedPhoneNumber',
+             "result": []
+         });
+     } else {
+         db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber) VALUES (?,?,?,?,?);',[id,pw,0,name,pNum], function(err,result,fields){
+            if(err){
+            console.log(err);
+            console.log('Error in join part first sql query');
+            res.send({
+                "status": 'protocolError',
+                "result": []
+            });
+            } else{
+            db.query('INSERT INTO location (latitude,longitude,location.id,updated_time) VALUES (?,?,?,?);',[0,0,id,'1999-12-31 23:59:59'],function(err2,result2,fields2){
+                if(err2){
+                console.log('Error in join part second sql query');
+                res.send({
+                    "status":'dbError',
+                    "result":[]
+                });
+                } else{
+                    res.send({
+                        'status': 'OK',
+                        'result': []
+                    });
+                }
+            });
+            }
+        });    
+     }
   });
 });
 
@@ -351,10 +361,12 @@ function createMeeting(request, response) {
                 "result": []
             })
         } else {
-            db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);', [meetName, "", location.latitude, location.longitude, meetTime, hostName], function (err, result, fields) {
+            db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);',
+            [meetName, "", location.latitude, location.longitude, meetTime, request.session.logined],
+            function (err, result, fields) {
                 if (err) {
                     console.log(err);
-                    console.log('Error in join part first sql query');
+                    console.log('Error in InsertInto part first sql query');
                     response.send({
                         "status": 'protocolError',
                         "result": []
@@ -378,7 +390,6 @@ function createMeeting(request, response) {
             }
         }
     });
-    //response.end("meetTime : " + meetTime + "," + "meetName : " + meetName);
 }
 
 app.post('/createMeeting', createMeeting, function (error, data) {
