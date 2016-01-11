@@ -57,12 +57,23 @@ app.post('/login', function(req,res){
               });
             }else{
               console.log('login success');
-              res.send({
-                "status": "OK",
-                "result": result2
+              db.query('SELECT * FROM (SELECT meeting_id FROM meeting_members WHERE meeting_member = ?)temp1 INNER JOIN (SELECT * FROM meeting_members, meeting, member WHERE meeting_members.meeting_member = member.id AND meeting.m_id = meeting_members.meeting_id)temp2 WHERE temp1.meeting_id = temp2.meeting_id;',[id],function(err,result,field){
+                    if (err) {
+                        console.log('error in login part 3rd sql query');
+                        res.send({
+                          'status': 'dbError',
+                          'result': []
+                        });
+                    } else {
+                        console.log(result);
+                        res.send({
+                            "status": "OK",
+                            "result": result2
+                        });
+                        req.session.logined = id;
+                        req.session.save();
+                    }
               });
-              req.session.logined = id;
-              req.session.save();
             }
           });
         }else{//로그인 실패 by password mismatch
