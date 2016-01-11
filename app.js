@@ -188,25 +188,32 @@ app.post('/join', function(req,res){
   console.log(json);
   
   db.query('SELET * from phoneNumber where phoneNumber =?', [pNum], function (error, rows, field) {
-     if (error) {
-         console.log("Already have phone number : " + pNum);
-         res.send({
+    if (error) {
+        console.log('error in join part first sql query');
+        res.send({
+            'status': 'dbError',
+            'result': []
+        });
+    } else { 
+        if (rows.length!=0){
+          console.log("Already have phone number : " + pNum);
+          res.send({
              "status": 'DuplicatedPhoneNumber',
              "result": []
-         });
-     } else {
-         db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber) VALUES (?,?,?,?,?);',[id,pw,0,name,pNum], function(err,result,fields){
+          });
+        } else {
+          db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber) VALUES (?,?,?,?,?);',[id,pw,0,name,pNum], function(err,result,fields){
             if(err){
-            console.log(err);
-            console.log('Error in join part first sql query');
-            res.send({
+              console.log(err);
+              console.log('Error in join part second sql query');
+              res.send({
                 "status": 'protocolError',
                 "result": []
-            });
+              });
             } else{
             db.query('INSERT INTO location (latitude,longitude,location.id,updated_time) VALUES (?,?,?,?);',[0,0,id,'1999-12-31 23:59:59'],function(err2,result2,fields2){
                 if(err2){
-                console.log('Error in join part second sql query');
+                console.log('Error in join part 3rd sql query');
                 res.send({
                     "status":'dbError',
                     "result":[]
@@ -219,7 +226,8 @@ app.post('/join', function(req,res){
                 }
             });
             }
-        });    
+          });  
+        }
      }
   });
 });
