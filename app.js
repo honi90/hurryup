@@ -287,6 +287,28 @@ app.post('/checkArrival', function(req, res){
 		
 });
 
+app.post('/checklateness', function(req,res){
+    if(req.session.logined){
+        console.log('Not logined user want to check lateness');
+        res.send({
+            'status': 'invalidUser',
+            'result': []
+        });
+    } else {
+        //TODO 최근 일주일의 날짜별 지각 시간 전송. 
+        db.query('',[],function(err,result,field){
+            if(err){
+                console.log('error in check lateness part first sql query');
+                res.send({
+                    'status':'dbError',
+                    'result':[]
+                });
+            } else {
+                ////////////////////////////////////
+            }
+        });
+    }
+});
 
 //H.W. part
 app.post('/location', function(request, response){
