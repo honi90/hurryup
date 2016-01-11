@@ -67,7 +67,7 @@ app.post('/login', function(req,res){
                     } else {
                         //console.log(result);
                         var result_json={
-                            staus:'OK',
+                            status:'OK',
                             result:[]    
                         };
                         var checkarr=[];
@@ -79,7 +79,10 @@ app.post('/login', function(req,res){
                             if(checker!=0){
                                 for(var j =0; j<checkarr.length;j++){
                                     if(checkarr[j]==result[i].meeting_id){
-                                        result_json.result[j].meeting_members.push(result[i].name);
+                                        result_json.result[j].meeting_members.push({
+                                            id: result[i].id,
+                                            name: result[i].name
+                                        });
                                     }
                                 }
                             } else { 
@@ -87,7 +90,10 @@ app.post('/login', function(req,res){
                                 result_json.result.push({
                                     meeting_id: result[i].meeting_id,
                                     meeting_name: result[i].m_title,
-                                    meeting_members: [result[i].name]
+                                    meeting_members: [{
+                                        id: result[i].id,
+                                        name: result[i].name
+                                    }]
                                 });
                             }
                         }
@@ -183,6 +189,7 @@ app.post('/join', function(req,res){
   var pw = json.password;
   var name = json.name;
   var pNum = json.phoneNumber;
+  var email = json.email;
   
   console.log('requested data: ');
   console.log(json);
@@ -202,7 +209,7 @@ app.post('/join', function(req,res){
              "result": []
           });
         } else {
-          db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber) VALUES (?,?,?,?,?);',[id,pw,0,name,pNum], function(err,result,fields){
+          db.query('INSERT INTO member (id,pw,credit,member.name,phoneNumber,email) VALUES (?,?,?,?,?,?);',[id,pw,0,name,pNum,email], function(err,result,fields){
             if(err){
               console.log(err);
               console.log('Error in join part second sql query');
@@ -231,6 +238,55 @@ app.post('/join', function(req,res){
      }
   });
 });
+
+app.post('/checkArrival', function(req, res){
+		var json_parsed=req.body;
+		var meeting_id=json_parsed.meeting_id;
+		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
+    
+    db.query('SELECT * FROM meeting_members WHERE meeting_id = ? AND meeting_member = ?;',[meeting_id,req.session.logined],function(err,result,field){
+        if (err) {
+            console.log('error in check arrival part first query');
+            console.log(err);
+            res.send({
+                'status': 'dbError',
+                'result':[]
+            });
+        } else {
+            if (result.length == 0) {
+                console.log('invalid user want check arrival');
+                res.send({
+                    'status': 'invalidUser',
+                    'result': []
+                });
+            } else{
+                db.query('SELECT * FROM meeting_members WHERE meeting_id = ?;',[meeting_id],function(err,result,field){
+                    if (err) {
+                        console.log('error in check arrival part 2nd sql query');
+                        res.send({
+                            'status': 'dbError',
+                            'result': []
+                        });
+                    } else {
+                        var result_json ={
+                            status: 'OK',
+                            result: []
+                        };
+                        for(var i=0;i<result.length;i++){
+                            result_json.result.push({
+                                id: result[i].meeting_member,
+                                is_arrived: result[i].is_arrived
+                            }); 
+                        }
+                        res.send(result_json);
+                    }
+                });
+            }
+        }
+    });
+		
+});
+
 
 //H.W. part
 app.post('/location', function(request, response){
