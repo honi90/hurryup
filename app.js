@@ -509,87 +509,77 @@ app.post('/createMeeting', createMeeting, function (error, data) {
     console.log(data);
 });
 
-
 app.post('/noticeArrival', function(request, response){
-//part1] request 확인
+		//part1] request 확인
 		var json_parsed=request.body;
-	
 		var id = json_parsed.user_id;
 		var meeting_id=json_parsed.meeting_id;
-		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
+		var new_updated_time = moment().tz('Asia/Seoul').format("YYYY-MM-DD HH:mm:ss");
 
 		console.log('id 		:' + id);
 		console.log('meeting_id :' + meeting_id);
 
-
-//part2] DB update
+		//part2] DB update
 		db.query('UPDATE meeting_members SET is_arrived= 1,arrived_time=? WHERE meeting_id =? AND meeting_member=?',[new_updated_time,meeting_id, id], function(err) {
-      
-      });
+			if(err)	{
+					console.log(err);
+					console.log("noticeArriaval DB error :1");
+			}
 
-		db.query('SELECT * FROM meeting_members where meeting_member =?  AND  meeting_id=?', [id,meeting_id],function(err,result,field){
+			else{
+				db.query('SELECT * FROM meeting_members where meeting_member =?  AND  meeting_id=?', [id,meeting_id],function(err,result,field){
 					if(err)
 					{
 						console.log("Error in Update Meeting_member  Query error");
-						response.send({
-							"status":"Error",
-							"result":[]
+						response.send({"status":"Error","result":[]});
+					}
+
+					else{
+						db.query('SELECT * FROM meeting where m_id =?', [meeting_id],function(err,result,field){
+							console.log(result);
+
+							var meet_time = moment(result[0].m_time).tz("Asia/Seoul");
+							var arrive_time = moment().tz("Asia/Seoul");
+							var diff = arrive_time.diff(meet_time,'minutes')
+							console.log('약속'+meet_time.format("YYYY-MM-DD HH:mm:ss"));
+							console.log('도착' + arrive_time.format("YYYY-MM-DD HH:mm:ss"));
+							console.log(diff);
+							if(diff>0)
+							{
+								console.log('지각');
+								db.query('INSERT INTO member_lateness (member_id,late_time) VALUES (?,?)',[id,diff],function(err,result,field){
+									
+											if(err){
+												console.log(err);
+												console.log('noticeARRIVAL lATE DB update err!!!!');
+											}
+											else{
+												console.log(result[0]);
+												console.log(field);
+											}
+									});
+
+								db.query('UPDATE member SET credit = credit + ? where id =?',[diff,id],function(err,result,fields)
+										{
+											if(err){
+												console.log(err);
+												console.log('지각 memberDB credit 오류');
+											}
+											else{
+												console.log(result);
+											}
+										}
+										);
+							}
+							response.send({"status": "Success","arrival_time": new_updated_time});
 						});
 					}
-          else{
-			
-              if(result.length ==0)
-				    	{
-				    		console.log("Update Arrival  failed : InvalidID");
-				    		response.send({
-				    			"status": "InvalidMember",
-				  	  		"result": []
-				  	  		});
-				    	}
-             else{
+				});
+			 }
+		});
 
-					      console.log(result);
-
-             
-		            db.query('SELECT * FROM meeting where m_id =?', [meeting_id],function(err,result,field){
-                      
-                    if(result.length==0)
-                    {
-                      console.log("그런meeting없다");
-
-                    }
-                    else{
-                    console.log(">>>>>>> :\n"+result);
-                      console.log(new_updated_time);
-                      console.log(result[0].m_time);
-                      var a = moment(result[0].m_time).tz("Asia/Seoul");
-                      var b = moment().tz("Asia/Seoul");
-                      var c = a.diff(b)
-                      console.log(c);
-                      }
-                 });
-                    
-					      response.send(
-					       	{
-					        	"status": "Success",
-						        "arrival_time": new_updated_time
-					      	});
-               }
-          //////////////////////////////credit 살리기이이이이이
-         }
-			});
-
-
-		
 });
 
-app.get('/',function(req,res){
-  var output={};
-  output.cookies = req.cookies;
-  output.session = req.session;
-  
-  res.send(output);
-});
 
 http.createServer(app).listen(10000, function(){
   console.log('server running at (server ip):80');
