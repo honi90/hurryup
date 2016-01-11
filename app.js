@@ -65,11 +65,33 @@ app.post('/login', function(req,res){
                           'result': []
                         });
                     } else {
-                        console.log(result);
-                        res.send({
-                            "status": "OK",
-                            "result": result2
-                        });
+                        //console.log(result);
+                        var result_json={
+                            staus:'OK',
+                            result:[]    
+                        };
+                        var checkarr=[];
+                        for(var i = 0; i<result.length;i++){
+                            var checker = 0;
+                            for(var j =0; j<checkarr.length;j++){
+                                if(checkarr[j]==result[i].meeting_id) checker++;
+                            }
+                            if(checker!=0){
+                                for(var j =0; j<checkarr.length;j++){
+                                    if(checkarr[j]==result[i].meeting_id){
+                                        result_json.result[j].meeting_members.push(result[i].name);
+                                    }
+                                }
+                            } else { 
+                                checkarr.push(result[i].meeting_id);
+                                result_json.result.push({
+                                    meeting_id: result[i].meeting_id,
+                                    meeting_name: result[i].m_title,
+                                    meeting_members: [result[i].name]
+                                });
+                            }
+                        }
+                        res.send(result_json);
                         req.session.logined = id;
                         req.session.save();
                     }
