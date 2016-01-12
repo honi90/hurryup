@@ -546,45 +546,42 @@ app.post('/noticeArrival', function(request, response){
 			if(err)	{
 					console.log(err);
 					console.log("noticeArriaval DB error :1");
+          response.send({
+            'status':'protocolError',
+            'result':[]
+          });
 			}
-
 			else{
 				db.query('SELECT * FROM meeting_members where meeting_member =?  AND  meeting_id=?', [id,meeting_id],function(err,result,field){
 					if(err)
 					{
 						console.log("Error in Update Meeting_member  Query error");
-						response.send({"status":"Error","result":[]});
+						response.send({"status":"dbError","result":[]});
 					}
-
 					else{
-            console.log('second querys result');
-            console.log(result);
 						db.query('SELECT * FROM meeting WHERE m_id =?', [meeting_id],function(err,result,field){
-							console.log(result);
-
 							var meet_time = moment(result[0].m_time).tz("Asia/Seoul");
 							var arrive_time = moment().tz("Asia/Seoul");
 							var diff = arrive_time.diff(meet_time,'minutes')
-							console.log('약속'+meet_time.format("YYYY-MM-DD HH:mm:ss"));
+							console.log('약속' + meet_time.format("YYYY-MM-DD HH:mm:ss"));
 							console.log('도착' + arrive_time.format("YYYY-MM-DD HH:mm:ss"));
 							console.log(diff);
 							if(diff>0)
 							{
 								console.log('지각');
 								db.query('INSERT INTO member_lateness (member_id,late_time) VALUES (?,?)',[id,diff],function(err,result,field){
-									
 											if(err){
 												console.log(err);
 												console.log('noticeARRIVAL lATE DB update err!!!!');
-											}
+											  response.send({'status':'dbError','result':[]});
+                      }
 											else{
-												console.log(result[0]);
-												console.log(field);
 								        db.query('UPDATE member SET credit = credit + ? where id =?',[diff,id],function(err,result,fields)
 								        { 
 											    if(err){
 												    console.log(err);
 												    console.log('지각 memberDB credit 오류');
+											      response.send({'status':'dbError','result':[]});
 											    }else{
 												    console.log(result);
 							              response.send({"status": "Success","arrival_time": new_updated_time});
