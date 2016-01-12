@@ -59,7 +59,6 @@ app.post('/noticeArrival', function(request, response){
 							{
 								console.log('지각');
 								db.query('INSERT INTO member_lateness (member_id,late_time) VALUES (?,?)',[id,diff],function(err,result,field){
-									
 											if(err){
 												console.log(err);
 												console.log('noticeARRIVAL lATE DB update err!!!!');
@@ -67,13 +66,8 @@ app.post('/noticeArrival', function(request, response){
 											else{
 												console.log(result[0]);
 												console.log(field);
-											
 											}
-											
-										
-									
 									});
-
 								db.query('UPDATE member SET credit = credit + ? where id =?',[diff,id],function(err,result,fields)
 										{
 											if(err){
@@ -82,12 +76,12 @@ app.post('/noticeArrival', function(request, response){
 											}
 											else{
 												console.log(result);
+							          response.send({"status": "Success","arrival_time": new_updated_time});
 											}
 										}
 										);
 
 							}
-							response.send({"status": "Success","arrival_time": new_updated_time});
 						});
 					}
 				});

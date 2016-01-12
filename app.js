@@ -67,7 +67,7 @@ app.post('/login', function(req,res){
                     } else {
                         //console.log(result);
                         var result_json={
-                            status:'OK',
+                            status:'Success',
                             result:[]    
                         };
                         var checkarr=[];
@@ -173,7 +173,7 @@ app.post('/checkId', function(req,res){
       }else{
         console.log("ID accepted");
         res.send({
-          'status':'OK',
+          'status':'Success',
           'result':[]
         });
       }
@@ -227,7 +227,7 @@ app.post('/join', function(req,res){
                 });
                 } else{
                     res.send({
-                        'status': 'OK',
+                        'status': 'Success',
                         'result': []
                     });
                 }
@@ -269,7 +269,7 @@ app.post('/checkArrival', function(req, res){
                         });
                     } else {
                         var result_json ={
-                            status: 'OK',
+                            status: 'Success',
                             result: []
                         };
                         for(var i=0;i<result.length;i++){
@@ -557,7 +557,9 @@ app.post('/noticeArrival', function(request, response){
 					}
 
 					else{
-						db.query('SELECT * FROM meeting where m_id =?', [meeting_id],function(err,result,field){
+            console.log('second querys result');
+            console.log(result);
+						db.query('SELECT * FROM meeting WHERE m_id =?', [meeting_id],function(err,result,field){
 							console.log(result);
 
 							var meet_time = moment(result[0].m_time).tz("Asia/Seoul");
@@ -578,22 +580,20 @@ app.post('/noticeArrival', function(request, response){
 											else{
 												console.log(result[0]);
 												console.log(field);
+								        db.query('UPDATE member SET credit = credit + ? where id =?',[diff,id],function(err,result,fields)
+								        { 
+											    if(err){
+												    console.log(err);
+												    console.log('지각 memberDB credit 오류');
+											    }else{
+												    console.log(result);
+							              response.send({"status": "Success","arrival_time": new_updated_time});
+										      }
+								        });
 											}
 									});
 
-								db.query('UPDATE member SET credit = credit + ? where id =?',[diff,id],function(err,result,fields)
-										{
-											if(err){
-												console.log(err);
-												console.log('지각 memberDB credit 오류');
-											}
-											else{
-												console.log(result);
-											}
-										}
-										);
 							}
-							response.send({"status": "Success","arrival_time": new_updated_time});
 						});
 					}
 				});
