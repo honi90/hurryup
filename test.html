@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <!-- 모바일 QA AOS -->
+  	<MOBILE_SET>
+		<this_zone>real</this_zone>                                                 <!-- 게임에 적용될 ZONE -->
+		<server_open>1</server_open>                                               <!-- 서버 오픈 상황 : 0이면 closed. 1 이면 open. -->
+		<server_closed_begin>2015-08-24 07:50:00</server_closed_begin>             <!-- 서버 닫힌 상황의 점검시작시간 (UTC) 가운데 빈칸 하나 주의할것. -->
+		<server_closed_end>2015-08-24 08:00:00</server_closed_end>                 <!-- 서버 닫힌 상황의 점검종료시간 (UTC) 가운데 빈칸 하나 주의할것.-->
+		<major_ver>1.1.3</major_ver>                                              <!-- 메이저 버전 : 유저가 메이저 버전 미만인 경우는, 업데이트 강제로 시켜야함. -->
+		<minor_ver>1.1.3</minor_ver>                                               <!-- 마이너 버전 : 유저가 마이너 버전 미만인 경우는, 업데이트 권유. -->
+		<market_url>market://details?id=com.netmarble.gholdem</market_url>         <!-- 마켓URL : 일단은 사용하지 않는다. -->
+		<assetbundle_url>https://showdown-gcdn.netmarble.net/patch/REAL/IOS/20160105</assetbundle_url>       <!-- 애셋번들URL : 안드로이드 -->
+		<netsecurity_key>12345</netsecurity_key>									<!-- 시큐리티 키 일단 넣어서 테스트 -->
+    <server_connect_num>2</server_connect_num>
+	</MOBILE_SET>
+	
+	<!-- 기존의 GameConfig -->
+	<GameInfo>
+		<optionVersion>2</optionVersion>
+		<isKorea>false</isKorea>
+		<useMinigame>true</useMinigame>
+		<useTutorial>false</useTutorial>
+		<useTester>false</useTester>
+		<isUnderConstruction>true</isUnderConstruction>
+		<useNoInputDisconnect>false</useNoInputDisconnect>
+		<MIN_AVATAR_IDLE>10</MIN_AVATAR_IDLE>
+		<MAX_AVATAR_IDLE>30</MAX_AVATAR_IDLE>
+		<MAX_HAND_CARD>2</MAX_HAND_CARD>
+		<MAX_RANDOM_ANIMATION_CLIP>5</MAX_RANDOM_ANIMATION_CLIP>
+		<MAX_CHIP_ELEMENTS>3</MAX_CHIP_ELEMENTS>
+		<MAX_ANIMSET_MALE>1</MAX_ANIMSET_MALE>
+		<MAX_ANIMSET_FEMALE>1</MAX_ANIMSET_FEMALE>
+		<MAX_BUDDY_COUNT>500</MAX_BUDDY_COUNT>
+		<MAX_TRYCONNECT>3</MAX_TRYCONNECT>
+		<MAX_BANNER>2</MAX_BANNER>
+		<PREFETCHSOCKETPOLICY_PORT>12001</PREFETCHSOCKETPOLICY_PORT>
+		<PREFETCHSOCKETPOLICY_TIMEOUT>10000</PREFETCHSOCKETPOLICY_TIMEOUT>
+		<CONNECT_WAIT_TIMEOUT>3000.0</CONNECT_WAIT_TIMEOUT>
+		<GIFTSHOP_RENDERTEXTURE_WIDTH>142</GIFTSHOP_RENDERTEXTURE_WIDTH>
+		<GIFTSHOP_RENDERTEXTURE_HEIGHT>142</GIFTSHOP_RENDERTEXTURE_HEIGHT>
+		<GIFTSHOP_RENDERTEXTURE_DEPTH>24</GIFTSHOP_RENDERTEXTURE_DEPTH>
+		<USERREVIEW_FIRST_PLAYCOUNT>1</USERREVIEW_FIRST_PLAYCOUNT>
+		<USERREVIEW_SECOND_PLAYCOUNT>3</USERREVIEW_SECOND_PLAYCOUNT>
+		<USERREVIEW_THIRD_PLAYCOUNT>3</USERREVIEW_THIRD_PLAYCOUNT>
+		<BIG_WIN>2.0</BIG_WIN>
+		<BIG_LOSE>0.5</BIG_LOSE>
+		<maintenanceBegin>11/17/2014 07:00:00 PM</maintenanceBegin>
+		<maintenanceEnd>11/17/2014 11:00:00 PM</maintenanceEnd>
+		<maintenanceString>11/12/2014 1:30:00 AM</maintenanceString>
+		<!-- 검수 정보 --!>
+    <urlLoginServer>121.156.54.56</urlLoginServer>
+		<portLoginServer>26100</portLoginServer>    
+    <!-- 리얼 정보 -->
+    <urlLoginServer>pogl.netmarble.com</urlLoginServer>
+    <portLoginServer>12000</portLoginServer>
+    <gameCode>gholdem</gameCode>
+		<netmarbleSLoginZone>real</netmarbleSLoginZone>
+		<facebookAppId>1465764766984047</facebookAppId>
+		<urlGameAPI>http://mgameapi.netmarble.net/v1/client/ip</urlGameAPI>
+		<urlAssetBundle>https://showdown_us.s3.amazonaws.com/patch/REAL/PC/</urlAssetBundle>
+    <urlTermsOfService>http://help.netmarble.com/policy/terms_of_service.asp</urlTermsOfService>
+    <urlPrivacyPolicy>http://help.netmarble.com/policy/privacy_policy.asp</urlPrivacyPolicy>
+		<urlPokerTerm>http://showdown-gcdn.netmarble.net/policy.html</urlPokerTerm>
+		<urlSupport>http://help.netmarble.com/mobile/default/html/help/help.asp</urlSupport>
+		<urlFacebookApp>https://www.facebook.com/4onespoker</urlFacebookApp>
+		<urlRanking>https://rankingapi.netmarble.net/ranking</urlRanking>
+		<facebookAppName>netmarblepoker</facebookAppName>
+		<facebookAppURL>http://showdown.netmarble.net/applink/</facebookAppURL>
+    <facebookCustomObjPath>http://showdown.netmarble.net/og/</facebookCustomObjPath>
+    <facebookFeedImgPath>https://showdown-gcdn.netmarble.net/full/images/feed/151121/</facebookFeedImgPath>
+    <facebookCustomImgPath>https://showdown-gcdn.netmarble.net/full/images/custom/151214/</facebookCustomImgPath>
+		<localTopbarGameLogo>top_bi_beta</localTopbarGameLogo>
+		<localLobbyBanner>wr_bn_img{0:D2}</localLobbyBanner>
+		<avatarAnimationTransitionIn>0.1</avatarAnimationTransitionIn>
+		<avatarAnimationTransitionOut>0.9</avatarAnimationTransitionOut>
+		<durationDealHandCard>0.25</durationDealHandCard>
+		<durationBet>1.2</durationBet>
+		<durationSeeHandCard>1.0</durationSeeHandCard>
+		<durationBestHand>1.0</durationBestHand>
+		<durationBigWin>5.0</durationBigWin>
+		<durationMoveToPot>0.5</durationMoveToPot>
+		<durationMoveToWinner>0.5</durationMoveToWinner>
+		<durationMoveToDealerButton>0.5</durationMoveToDealerButton>
+		<durationBlindBet>0.0</durationBlindBet>
+		<durationOpenHandCard>0.75</durationOpenHandCard>
+		<durationWinIcon>2.5</durationWinIcon>
+		<durationTakeChip>0.5</durationTakeChip>
+		<durationTakeExp>1.0</durationTakeExp>
+		<durationClearTable>0.5</durationClearTable>
+		<durationInGameLevelup>5.0</durationInGameLevelup>
+		<durationInGameNotice>10.0</durationInGameNotice>
+		<durationRewardEffectTime>1.0</durationRewardEffectTime>
+		<durationLobbyBanner>3.0</durationLobbyBanner>
+		<durationRefreshRender>0.5</durationRefreshRender>
+		<timeWaitDealHandCard>0.75</timeWaitDealHandCard>
+		<timeEmotionReactive>7.0</timeEmotionReactive>
+		<timeBettingTimeOut>10.0</timeBettingTimeOut>
+		<timePlaySoundForTimer>5.0</timePlaySoundForTimer>
+		<timeCheckInventoryItem>9999.0</timeCheckInventoryItem>
+		<timeCheckNoInput>600.0</timeCheckNoInput>
+		<timeCheckTryConnect>1000.0</timeCheckTryConnect>
+		<timeBuyInTimeOut>3</timeBuyInTimeOut>
+	</GameInfo>
+	<LogInfo>
+		<useGUI>true</useGUI>
+		<isWriteFile>true</isWriteFile>
+		<isErrorBreak>true</isErrorBreak>
+		<isMoreInfo>true</isMoreInfo>
+		<logType>CMD, NETWORK, GAME</logType>
+	</LogInfo>
+</config>
