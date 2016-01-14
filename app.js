@@ -287,8 +287,11 @@ app.post('/checkArrival', function(req, res){
 		
 });
 
-app.post('/checklateness', function(req,res){
-    if(req.session.logined){
+app.post('/getlateness', function(req,res){
+    //console.log(req.session.logined);
+    //var id = req.body.id;
+    var id = req.session.logined;
+    if(!id){
         console.log('Not logined user want to check lateness');
         res.send({
             'status': 'invalidUser',
@@ -296,7 +299,7 @@ app.post('/checklateness', function(req,res){
         });
     } else {
         //TODO 최근 일주일의 날짜별 지각 시간 전송. 
-        db.query('',[],function(err,result,field){
+        db.query('SELECT * FROM member_lateness WHERE member_lateness.member_id = ?;',[id],function(err,result,field){
             if(err){
                 console.log('error in check lateness part first sql query');
                 res.send({
@@ -304,7 +307,18 @@ app.post('/checklateness', function(req,res){
                     'result':[]
                 });
             } else {
-                ////////////////////////////////////
+                var json={status:'Success',result:[]};
+                var now = moment().tz("Asia/Seoul");
+                for(var i = 0; i<7; i++){
+                    json.result.push(0);
+                }
+                for(var i = 0; i<result.length; i++){
+                    var late_date = moment(result[i].date).tz("Asia/Seoul");
+                    var diff = now.diff(late_date,'day');
+                    console.log(diff);
+                    json.result[diff-1]+=result[i].late_time;
+                }
+                res.send(json);
             }
         });
     }
@@ -601,6 +615,6 @@ app.post('/noticeArrival', function(request, response){
 
 
 http.createServer(app).listen(10000, function(){
-  console.log('server running at (server ip):80');
+  console.log('server running at 54.238.241.139:10000');
 });
 
