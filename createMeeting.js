@@ -5,6 +5,8 @@ var http = require('http'),
     bodyParser = require('body-parser'),
     mysql = require('mysql'),
     async = require('async');
+mysql = require('mysql');
+var TMClient = require('textmagic-rest-client');
 
 var app = express();
 
@@ -21,8 +23,24 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+
+function sendSMSToUser(phoneNumber) {
+    var c = new TMClient('shinjaehun', 'AvzvPQo5gxAq31GZK3EiT7ZGOc8Zqf');
+    phoneNumber.substr(1);
+    phoneNumber = '82' + phoneNumber;
+    c.Messages.send({ text: '당신이 모임에 초대 받았습니다! 앱을 다운받아 보시겠어요?', phones: phoneNumber }, function (err, res) {
+        if (err) {
+            console.log('Messages.send()', err, res);
+        } else {
+            res.send({
+                "status": 'ok',
+                "result": []
+            })
+        }
+    });
+}
+
 function createMeeting(request, response) {
-    var invalidPhoneNumbers = [];
 
     var phoneNumbers = request.body.phoneNumber;
     var meetName = request.body.meetName,
@@ -35,7 +53,10 @@ function createMeeting(request, response) {
                 console.log("Select phone number query makes error.");
                 next(err);
             } else if (result.length === 0) {
-                invalidPhoneNumbers.push(phoneNumber);
+                sendSMSToUser(phoneNumber, function (err) {
+                    console.log(err);
+                    next(err);
+                });
                 next();
             } else {
                 db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);',
@@ -52,34 +73,20 @@ function createMeeting(request, response) {
             }
         });
     }, function (error) {
-
         if (error) {
             console.log("Error is occured : " + error);
-
             response.send({
                 "status": 'protocolError',
                 "result": []
             });
-
         } else {
-            if (invalidPhoneNumbers.length > 0) {
-                    response.send({
-                        "status": "InvalidPhoneNumber",
-                        "result": invalidPhoneNumbers
-                    });
-                } else if (true) {
-                    response.send({
-                        "status": "ok",
-                        "result": []
-                    });
-                } else {
-                    response.send({
-                        "status": "invalidUser",
-                        "result": []
-                    });
-                }
-            }
-        });
+            response.send({
+                "status": "invalidUser",
+                "result": []
+            });
+        }
+
+    });
 }
 
 app.post('/createMeeting', createMeeting, function (error, data) {
