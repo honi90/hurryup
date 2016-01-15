@@ -22,10 +22,11 @@ var date = new Date();
 var db = mysql.createConnection({
   user: 'root',
   password: 'sgen',
-  database: 'Hurryup'
+  database: 'hurryup'
 });
 
 app.use(express.logger());
+app.use(express.session({secret:'secret key'}));
 app.use(express.bodyParser());
 app.use(express.json());
 
@@ -43,6 +44,7 @@ app.post('/login', function(req,res){
   db.query('SELECT id, pw FROM member WHERE id=?;',[id], function(err,result,fields){
     if(err){
       console.log('Error in login part first sql query');
+      console.log(err);
       res.send({
         "status": 'Error (login) protocol',
         "result": []
@@ -106,8 +108,8 @@ app.post('/login', function(req,res){
                             }
                         }
                         res.send(result_json);
-                        //req.session.logined = id;
-                       // req.session.save();
+                        req.session.logined = id;
+                        req.session.save();
                     }
               });
             }
@@ -123,7 +125,7 @@ app.post('/login', function(req,res){
     }
   });
 });
-/*
+
 app.post('/logout', function(req,res){
   if(req.session.logined){
   req.session.destroy(function(err){
@@ -145,7 +147,7 @@ app.post('/logout', function(req,res){
     });
   }
 });
-*/
+
 app.post('/checkId', function(req,res){
   req.accepts('application/json');
   var json = req.body;
@@ -579,25 +581,18 @@ function joinMeeting(request, response) {
                     });
                 } else {
                     console.log("Insert into meeting mebers success");
+                    if (request.session.logined) {
+                        response.send({
+                            "status": "ok",
+                            "result": []
+                        });
+                    }
                 }
             });
 
-    /*    if (request.session.logined) {
-            request.session.destroy(function (err) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    console.log('destroyed');
-                }
-            });
-            response.send({
-                "status": "ok",
-                "result": []
-            });
-        }*/
 
     }
-    response.end("meetingID : " + meetingID + "    isAccepted : " + isAccepted);
+    //response.end("meetingID : " + meetingID + "    isAccepted : " + isAccepted);
 }
 
 app.post('/joinMeeting', joinMeeting, function (error, data) {
@@ -618,6 +613,7 @@ function createMeeting(request, response) {
 
     var meetName = request.body.meetName,
         location = request.body.location,
+        locationName = request.body.locationName,
       	meetTime = request.body.meetTime;
 
     var phoneNumbers = request.body.phoneNumber;
@@ -746,18 +742,134 @@ client.sendMessage(
 
  }
 
-
-
-
-
-
-
-
-
-
 app.post('/createMeeting', createMeeting, function (error, data) {
     console.log(error);
     console.log(data);
+});
+
+app.post('/createMeeting2',function(req,res){
+    var meetName = req.body.meetName,
+        location = req.body.location,
+        locationName = req.body.locationName,
+        phoneNumbers = req.body.phoneNumbers,
+        hostName = req.body.hostName,
+      	meetTime = req.body.meetTime;
+    console.log(hostName); 
+    db.query('INSERT meeting (m_title,m_location,m_latitude,m_longitude,m_time,m_host) VALUES (?,?,?,?,?,?);',[meetName,locationName,location.latitude,location.longitude,meetTime,hostName],function(err,result,fields){
+        if(err){
+            console.log(err);
+            console.log('err in createMeeting2 first sql query');
+            res.send({'status':'dbError',result:[]});
+        } else {
+            db.query('SELECT m_id FROM meeting WHERE m_title = ? AND m_host =?;',[meetName,hostName],function(err,result,fields){
+                if(err){
+                  console.log(err);
+                  res.send({status:'dbError'});
+                } else {
+                  var m_id = result[result.length-1].m_id;
+                  db.query('INSERT meeting_members (meeting_id,meeting_member) VALUES (?,?);',[m_id,hostName],function(err,result,fields){
+                    if(err){
+                      console.log(err);
+                      console.log('err in create meeting 3rd query');
+                      res.send({status:'dbError',result:[]});
+                    } else {
+                      async.each(phoneNumbers,function(phoneNumber,next){
+                        db.query('INSERT invitation (phoneNumber,m_id) VALUES (?,?);',[phoneNumber,m_id],function(err,result2,fields){
+                          if(err) {
+                            next(err);
+                          } else {
+                            console.log(phoneNumber + " insert into invitaion table");
+                            next();
+                          }
+                        });
+                      }, function(error) {
+                        if(error) {
+                          console.log(error);
+                          console.log('error in create meeting async part');
+                          res.send({status:'dbError'});
+                        } else {
+                          res.send({status:'Success',result:[]});
+                        }
+                      });
+                    }
+                  });
+                }
+            });
+        }
+    });
+});
+
+app.post('/checkInvitation',function(req,res){
+    var id = req.body.id;
+    db.query('SELECT temp1.*, temp2.name FROM (SELECT meeting.m_id, meeting.m_title, meeting_members.meeting_member FROM meeting,meeting_members, invitation, member WHERE meeting.m_id = invitation.m_id AND meeting.m_id = meeting_members.meeting_id AND member.phoneNumber = invitation.phoneNumber AND member.id = ? AND is_accepted = 0)temp1 INNER JOIN (SELECT member.name, id from member)temp2 WHERE temp1.meeting_member = temp2.id;',[id],function(err,result,fields){
+        if(err) {
+            console.log(err);
+            console.log('err in check invitation first sql');
+            res.send({status:'dbError'});
+        } else {
+            json = {status:'Success',result:[]};
+            var checkarr = [];
+            for(var i = 0;i <result.length;i++) {
+                var checker = 0;
+                for(var j =0;j<checkarr.length;j++){
+                    if(checkarr[j]==result[i].m_title) checker++;
+                }
+                if(checker!=0){
+                    for(var j = 0; j<checkarr.length;j++){
+                        if(checkarr[j]==result[i].m_title){
+                            json.result[j].meeting_members.push({
+                                id: result[i].meeting_member,
+                                name: result[i].name
+                            });
+                        } 
+                    }
+                } else {
+                     checkarr.push(result[i].m_title);
+                     json.result.push({
+                         meeting_name: result[i].m_title,
+                         meeting_id: result[i].m_id,
+                         meeting_members:[{
+                             name: result[i].name,
+                             id: result[i].meeting_member
+                         }]
+                     });
+                 }
+              }
+              console.log(id);
+              console.log(json);
+              res.send(json);
+        }
+    });
+});
+
+app.post('/acceptInvitation', function(req,res){
+    var m_id = req.body.meeting_id;
+    var id = req.body.id;
+
+    db.query('INSERT meeting_members (meeting_id,meeting_member) VALUES (?,?);',[m_id,id],function(err,result,fields){
+        if(err){
+            console.log('err in accept invitation first query '+err);
+            res.send({status:'dbError'});
+        } else {
+            db.query('SELECT * FROM member, meeting WHERE meeting.m_id = ? AND member.id = ?;',[m_id,id],function(err,result,fields){
+                if(err) { 
+                    console.log('err in accept invitation 2nd query');
+                    console.log(err);
+                    res.send({status:'dbError'});
+                } else {
+                    db.query('UPDATE invitation SET is_accepted = 1 WHERE phoneNumber = ? AND m_id = ?;',[result[0].phoneNumber,result[0].m_id],function(err,result,fields){
+                        if(err) {
+                            console.log(err);
+                            console.log('err in accept invitation 3rd query');
+                            res.send({status:'dbError'});
+                        } else {
+                            res.send({status:'Success'});
+                        }
+                    });
+                }
+            });
+        }
+    });
 });
 
 app.post('/noticeArrival', function(request, response){
@@ -829,7 +941,7 @@ app.post('/noticeArrival', function(request, response){
 });
 
 
-http.createServer(app).listen(5000, function(){
+http.createServer(app).listen(10000, function(){
   console.log('server running at 54.238.241.139:10000');
 });
 
