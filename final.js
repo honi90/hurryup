@@ -108,8 +108,8 @@ app.post('/login', function(req,res){
                             }
                         }
                         res.send(result_json);
-                        req.session.logined = id;
-                        req.session.save();
+                        //req.session.logined = id;
+                        //req.session.save();
                     }
               });
             }
@@ -127,7 +127,7 @@ app.post('/login', function(req,res){
 });
 
 app.post('/logout', function(req,res){
-  if(req.session.logined){
+ /* if(req.session.logined){
   req.session.destroy(function(err){
       if(err){
         console.log(err);
@@ -145,11 +145,12 @@ app.post('/logout', function(req,res){
       "status": "Error (logout) invalidUser",
       "result":[]
     });
-  }
+  }*/
+    res.send({status:"Success",result:[]});
 });
 
 app.post('/checkId', function(req,res){
-  req.accepts('application/json');
+  //req.accepts('application/json');
   var json = req.body;
   var id = json.id;
 
@@ -328,7 +329,7 @@ app.post('/getlateness', function(req,res){
                     var late_date = moment(result[i].date).tz("Asia/Seoul");
                     var diff = now.diff(late_date,'day');
                     console.log(diff);
-                    json.result[diff-1]+=result[i].late_time;
+                    json.result[diff]+=result[i].late_time;
                 }
                 res.send(json);
             }
@@ -342,8 +343,8 @@ app.post('/location', function(request, response){
 		var json_parsed=request.body;
 	
 		var id = json_parsed.id;
-		var new_longitude=json_parsed.meetingLocation.longitude;
-		var new_latitude=json_parsed.meetingLocation.latitude;
+		var new_longitude=json_parsed.meetLocation.longitude;
+		var new_latitude=json_parsed.meetLocation.latitude;
 		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
 
 		console.log('id 		:' + id);
@@ -373,7 +374,7 @@ app.post('/location', function(request, response){
 					if(result.length ==0)
 					{
 						console.log("UpdateLocation failed : InvalidID");
-						resonse.send({
+            response.send({
 							"status": "Error (location ) DB2 UserLocationDataIsNotExist",
 							"result": []
 							});
@@ -422,7 +423,7 @@ app.post('/getMembersLocation', function(request, response){
 							location: {longitude : rows[i].longitude,latitude : rows[i].latitude},
 							updatedTime :dateFormat((rows[i].updated_time),"yyyy-mm-dd HH:MM:ss")});
 					}
-					response.send(JSON.stringify(output));
+					response.send({status:"Success",result:output});
 					console.log(JSON.stringify(output));
 
 				}
@@ -431,9 +432,6 @@ app.post('/getMembersLocation', function(request, response){
 
 	});
 });
-
-
-
 
 
 app.post('/writeComment', function(request, response){
@@ -465,7 +463,7 @@ app.post('/writeComment', function(request, response){
 					else if(result.length ==0)
 					{
 						console.log("Error in Board Query2 ");
-						resonse.send({
+						response.send({
 							"status": "Error (WriteComment) No History",
 							"result": ""
 							});
@@ -484,7 +482,9 @@ app.post('/writeComment', function(request, response){
 
 		//part3] DB update
 		else{
-			db.query('UPDATE meeting SET board=CONCAT(board,"/",?)  WHERE m_id =? ',[user_id+"@"+comment,meeting_id],function(err,result,field){
+			db.query('SELECT * FROM member WHERE id = ?;',[user_id],function(err,result,fields){
+      
+      db.query('UPDATE meeting SET board=CONCAT(board,"/",?)  WHERE m_id =? ',['['+result[0].name+"] "+comment,meeting_id],function(err,result,field){
 					
 					db.query('SELECT board FROM meeting where m_id= ?', [meeting_id],function(err,result,field){
 					if(err)
@@ -499,7 +499,7 @@ app.post('/writeComment', function(request, response){
 					else if(result.length ==0)
 					{
 						console.log("Error in Board Querye2 ");
-						resonse.send({
+						response.send({
 							"status": "Error (writeComment) No HIstory",
 							"result": []
 							});
@@ -513,47 +513,11 @@ app.post('/writeComment', function(request, response){
 						});
 					}
 				});
-
-
-					
 			});
+      });
 
 		}
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
