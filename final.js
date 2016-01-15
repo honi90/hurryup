@@ -6,7 +6,14 @@ var fs = require('fs'),
     mysql = require('mysql'),
     moment = require('moment-timezone'),
     dateFormat = require('dateformat'),
-    async = require('async');
+	async = require('async');
+
+
+//var TMClient = require('textmagic-rest-client');
+var twilio =require('twilio'),
+	client = twilio('AC03306d578862c299b446eaa6e76eb0e9','1cba81914b63bbfc9ea0d35090eb24f9'),	cronJob = require('cron').CronJob;
+
+
 
 var app = express();
 
@@ -15,12 +22,14 @@ var date = new Date();
 var db = mysql.createConnection({
   user: 'root',
   password: 'sgen',
-  database: 'hurryup'
+  database: 'Hurryup'
 });
 
 app.use(express.logger());
 app.use(express.bodyParser());
 app.use(express.json());
+
+//app.use(twilioNotifications.notifyOnError);
 
 app.post('/login', function(req,res){
   req.accepts('application/json');
@@ -97,8 +106,8 @@ app.post('/login', function(req,res){
                             }
                         }
                         res.send(result_json);
-                        req.session.logined = id;
-                        req.session.save();
+                        //req.session.logined = id;
+                       // req.session.save();
                     }
               });
             }
@@ -114,10 +123,10 @@ app.post('/login', function(req,res){
     }
   });
 });
-
+/*
 app.post('/logout', function(req,res){
   if(req.session.logined){
-    req.session.destroy(function(err){
+  req.session.destroy(function(err){
       if(err){
         console.log(err);
       }else{
@@ -136,7 +145,7 @@ app.post('/logout', function(req,res){
     });
   }
 });
-
+*/
 app.post('/checkId', function(req,res){
   req.accepts('application/json');
   var json = req.body;
@@ -193,10 +202,11 @@ app.post('/join', function(req,res){
   console.log('requested data: ');
   console.log(json);
   
-  db.query('SELET * from phoneNumber where phoneNumber =?', [pNum], function (error, rows, field) {
+  db.query('SELECT * from member where phoneNumber =?', [pNum], function (error, rows, field) {
     if (error) {
         console.log('error in join part first sql query');
-        res.send({
+        console.log(error);
+		res.send({
             'status': 'Error (join) DB ',
             'result': []
         });
@@ -241,9 +251,10 @@ app.post('/join', function(req,res){
 app.post('/checkArrival', function(req, res){
 		var json_parsed=req.body;
 		var meeting_id=json_parsed.meeting_id;
+		var member_id=json_parsed.user_id;
 		var new_updated_time = moment(new Date()).tz('Asia/Tokyo').format("YYYY-MM-DD HH:mm:ss");
     
-    db.query('SELECT * FROM meeting_members WHERE meeting_id = ? AND meeting_member = ?;',[meeting_id,req.session.logined],function(err,result,field){
+    db.query('SELECT * FROM meeting_members WHERE meeting_id = ? AND meeting_member = ?;',[meeting_id,member_id],function(err,result,field){
         if (err) {
             console.log('error in check arrival part first query');
             console.log(err);
@@ -288,8 +299,8 @@ app.post('/checkArrival', function(req, res){
 
 app.post('/getlateness', function(req,res){
     //console.log(req.session.logined);
-    //var id = req.body.id;
-    var id = req.session.logined;
+   	  var id = req.body.user_id;
+ //   var id = req.session.logined;
     if(!id){
         console.log('Not logined user want to check lateness');
         res.send({
@@ -571,7 +582,7 @@ function joinMeeting(request, response) {
                 }
             });
 
-        if (request.session.logined) {
+    /*    if (request.session.logined) {
             request.session.destroy(function (err) {
                 if (err) {
                     console.log(err);
@@ -583,7 +594,8 @@ function joinMeeting(request, response) {
                 "status": "ok",
                 "result": []
             });
-        }
+        }*/
+
     }
     response.end("meetingID : " + meetingID + "    isAccepted : " + isAccepted);
 }
@@ -593,13 +605,27 @@ app.post('/joinMeeting', joinMeeting, function (error, data) {
     console.log("Data : " + data);
 });
 
-function createMeeting(request, response) {
-    var invalidPhoneNumbers = [];
 
-    var phoneNumbers = request.body.phoneNumber;
+
+
+
+
+
+function createMeeting(request, response) {
+
+//	console.log("request>>");
+//	console.log(request);
+
     var meetName = request.body.meetName,
         location = request.body.location,
-        meetTime = request.body.meetTime;
+      	meetTime = request.body.meetTime;
+
+    var phoneNumbers = request.body.phoneNumber;
+
+	console.log(">>>\n" + phoneNumbers);
+
+//	sendSMSToUser(phoneNumbers);
+
 
     async.each(phoneNumbers, function (phoneNumber, next) {
         db.query('SELECT phoneNumber FROM member WHERE phoneNumber=?;', [phoneNumber], function (err, result, fields) {
@@ -607,11 +633,25 @@ function createMeeting(request, response) {
                 console.log("Select phone number query makes error.");
                 next(err);
             } else if (result.length === 0) {
-                invalidPhoneNumbers.push(phoneNumber);
+             	console.log("비회원 문자전송시도!!");
+				sendSMSToUser(phoneNumber, function (err) {
+					console.log("전송 to >>" + phoneNumber);
+                    console.log(err);
+                    next(err);
+                });
                 next();
             } else {
+
+				console.log("회원 문자전송시도!!");
+				sendSMSToUser2(phoneNumber, function (err) {
+					console.log("전송 to >>" + phoneNumber);
+                    console.log(err);
+                    next(err);
+                });
+
+				
                 db.query('INSERT INTO meeting (m_title, m_location, m_latitude, m_longitude, m_time, m_host) VALUES (?,?,?,?,?,?);',
-                    [meetName, "", location.latitude, location.longitude, meetTime, request.session.logined],
+                    [meetName, "", location.latitude, location.longitude, meetTime, phoneNumber],
                     function (err, result, fields) {
                         if (err) {
                             next(err);
@@ -624,35 +664,96 @@ function createMeeting(request, response) {
             }
         });
     }, function (error) {
-
         if (error) {
             console.log("Error is occured : " + error);
-
             response.send({
                 "status": 'protocolError',
                 "result": []
             });
-
         } else {
-            if (invalidPhoneNumbers.length > 0) {
-                    response.send({
-                        "status": "InvalidPhoneNumber",
-                        "result": invalidPhoneNumbers
-                    });
-                } else if (request.session.logined) {
-                    response.send({
-                        "status": "ok",
-                        "result": []
-                    });
-                } else {
-                    response.send({
-                        "status": "InvalidUser",
-                        "result": []
-                    });
-                }
-            }
-        });
+            response.send({
+                "status": "invalidUser",
+                "result": []
+            });
+        }
+
+    });
+
 }
+
+
+
+
+
+
+
+
+
+
+
+function sendSMSToUser(phoneNumber) {
+
+
+
+
+console.log("in function >> "+ '82'+ phoneNumber);
+
+
+phoneNumber= (phoneNumber+"").substr(1);
+phoneNumber='+82'+phoneNumber;
+console.log(phoneNumber +"<<");
+client.sendMessage( 
+			  { 
+				to:phoneNumber+"", 
+				from:'+12569800027', 
+				body:'[HurryUp]을 다운받아 약속을 확인하세요 '},
+				function( err, data ) {
+								if(err)	console.log(err);
+								else{
+							      console.log( "문자전송 시도"+ phoneNumber );
+								  }
+				});
+
+
+ }
+
+
+
+
+function sendSMSToUser2(phoneNumber) {
+
+
+
+
+console.log("in function >> "+ '82'+ phoneNumber);
+
+
+phoneNumber= (phoneNumber+"").substr(1);
+phoneNumber='+82'+phoneNumber;
+console.log(phoneNumber +"<<");
+client.sendMessage( 
+			  { 
+				to:phoneNumber+"", 
+				from:'+12569800027', 
+				body:'[HurryUp] 새로운 모임을 확인하세요 '},
+				function( err, data ) {
+								if(err)	console.log(err);
+								else{
+							      console.log( "문자전송 시도"+ phoneNumber );
+								  }
+				});
+
+
+ }
+
+
+
+
+
+
+
+
+
 
 app.post('/createMeeting', createMeeting, function (error, data) {
     console.log(error);
@@ -728,7 +829,7 @@ app.post('/noticeArrival', function(request, response){
 });
 
 
-http.createServer(app).listen(10000, function(){
+http.createServer(app).listen(5000, function(){
   console.log('server running at 54.238.241.139:10000');
 });
 
